@@ -2,40 +2,54 @@
 d3.json("./samples.json").then(function(data) {
     // console.log(data);
 
-    // Use otu_ids as the labels for the bar chart.
-    var dataLabels = data.samples[0].otu_ids;
-    var topLabels = dataLabels.slice(0, 10);
-    // Create OTU labels
-    var OTULabels = []
-    topLabels.forEach(label => OTULabels.push(`OTU ${label}`));
+    // Pulling out first 10 samples
+    var mySample = data.samples.slice(0, 10);
 
-    // Use sample_values as the values for the bar chart.
-    var dataValues = data.samples[0].sample_values;
-    var topValues = dataValues.slice(0, 10);
-    // console.log(topValues);
+    // console.log(mySample); 
 
-    // Use otu_labels as the hovertext for the chart.
-    var dataHoverText = data.samples[0].otu_labels;
-    var topHoverText = dataHoverText.slice(0, 10);
-    // console.log(topHoverText);
 
-    // Use id as dropdown selection
-    var sampleID = data.names.slice(0,10);
-    // console.log(sampleID);
+    
+    
+    //-------------------------------------------------------// 
+    // Define all 10 trace //
+    // Define all the values for all the fields for plotting/info box
+    var sampleID = mySample.map(s => s.id);
+    var sampleValues = mySample.map(s => s.sample_values.slice(0,10));
 
-    // Initialize the page with a default plot
+    var otuID = mySample.map(s => s.otu_ids.slice(0,10));
+    var otuIDChartLabel = [];
+
+    otuID.forEach((i) => {
+        var otuIDLabelArray = [];        
+        i.forEach(j => {
+            otuIDLabelArray.push(`OTU ${j}`);
+            // console.log(otuIDLabelArray);    
+        });
+        otuIDChartLabel.push(otuIDLabelArray);
+    });
+
+    var otuLabels = mySample.map(s => s.otu_labels.slice(0,10));
+
+    var demographicData = data.metadata.slice(0, 10);
+
+    // HA. HA. HA... thinking about what I have to do next makes me want to cry x'D
+
+    // 
+
+
+    // Initialize the page with a default plot & demographic info
     function init() {
 
-        // Horizontal bar chart with a dropdown menu to display the top 10 OTUs found in that individual
+        // DEFAULT HORIZONTAL BAR CHART //
         //-------------------------------------------------------// 
 
         // Create trace
         var trace1 = {
-            x: topValues.reverse(),
-            y: OTULabels.reverse(),
+            x: sampleValues[0].reverse(),
+            y: otuIDChartLabel[0].reverse(),
             type: "bar",
             orientation: "h",
-            text: topHoverText.reverse()
+            text: otuLabels[0].reverse()
         };
 
         // Data
@@ -43,6 +57,29 @@ d3.json("./samples.json").then(function(data) {
 
         // Render the plot
         Plotly.newPlot("bar", dataPlot);
+
+
+        // BUBBLE CHART //
+        //-------------------------------------------------------// 
+
+
+
+
+
+
+        // DEFAULT DEMOGRAPHIC BOX // 
+        //-------------------------------------------------------// 
+    
+        // Get a reference to the demographic div
+        var subjectDemo = d3.select("#sample-metadata");
+
+        // Use `Object.entries` and `forEach` to iterate through keys and values
+        Object.entries(demographicData[0]).forEach(([key, value]) => {
+            // Append `p` tag and add data
+            var paraValue = subjectDemo.append("p");
+            paraValue.text(`${key}: ${value}`);
+        });    
+
     }
 
     // Function called by DOM changes
@@ -55,6 +92,19 @@ d3.json("./samples.json").then(function(data) {
         var dataset = dropdownMenu.property("value");
         console.log(dataset);
 
+        // Oh gosh... Don't tell me, we have to append the "names" into drop down in html T_T
+                // DOESN'T WORK //
+        // Append `option value` to select tree
+        sampleID.forEach(s => {
+            var optionValue = selectID.append("option");
+            // optionValue.append(`value="${s}"`).text(s); //failed
+            // optionValue.append(`value="${s}"`).text(s); //failed
+            // selectID.attr('value', (s) => ${value}.push(s));
+            selectID.text(s);
+
+        });
+        // HORIZONTAL BAR CHART //
+        //-------------------------------------------------------// 
         // Initialize empty array for 
         var subjectData = [];
 
@@ -67,50 +117,35 @@ d3.json("./samples.json").then(function(data) {
         // Call function to update the chart
         Plotly.restyle("bar", "x", [x]);
         Plotly.restyle("bar", "y", [x]);
+
+        // DEMOGRAPHIC BOX // 
+        //-------------------------------------------------------// 
+        // Display demographic info for selected subject ID
+        // Will need to figure out if/else of some sort
+        // if (dataset === ) { //need a way to not hardcode
+        //     demographicData.forEach(s => {    // need to modify this so it calls the option we want
+        
+        //         // Use `Object.entries` and `forEach` to iterate through keys and values
+        //         Object.entries(s).forEach(([key, value]) => {
+        //             // Append `p` tag and add data
+        //             var paraValue = subjectDemo.append("p");
+        //             paraValue.text(`${key}: ${value}`);
+
+        //         });    
+        //     });
+        // }
+
+
+
+
     }
 
     init();
 
-    // Create a bubble chart that displays each sample.
-    //-------------------------------------------------------// 
+    
 
 
-        // Use otu_ids for the x values.
-
-
-        // Use sample_values for the y values.
-
-
-        // Use sample_values for the marker size.
-
-
-        // Use otu_ids for the marker colors.
-
-
-        // Use otu_labels for the text values.
-
-
-    // Display the sample metadata, i.e., an individual's demographic information.
-
-
-    // Display each key-value pair from the metadata JSON object somewhere on the page.
-
-    // Update all of the plots any time that a new sample is selected.
-
-
-    // Oh gosh... Don't tell me, we have to append the "names" into
-    //  drop down in html T_T
-// DOESN'T WORK //
-    // Use D3 to select the dropdown tag in html
-    var selectID = d3.select("#selDataset");
-
-    // Append `option value` to select tree
-    sampleID.forEach(s => {
-        var optionValue = selectID.append("option");
-        optionValue.append(`value="${s}"`).text(s);
-
-    });
-
+   
 
 
 
