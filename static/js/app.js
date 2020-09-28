@@ -1,6 +1,6 @@
 // Use the D3 library to read in samples.json.
 d3.json("./samples.json").then(function(data) {
-    // console.log(data);
+    // console.log(data.samples.length);
 
     // Pulling out first 10 samples
     var mySample = data.samples.slice(0, 10);
@@ -14,6 +14,7 @@ d3.json("./samples.json").then(function(data) {
     // Define all 10 trace //
     // Define all the values for all the fields for plotting/info box
     var sampleID = mySample.map(s => s.id);
+    console.log(sampleID);
     var sampleValues = mySample.map(s => s.sample_values.slice(0,10));
 
     var otuID = mySample.map(s => s.otu_ids.slice(0,10));
@@ -34,7 +35,17 @@ d3.json("./samples.json").then(function(data) {
 
     // HA. HA. HA... thinking about what I have to do next makes me want to cry x'D
 
-    // 
+    // MENU OPTION //
+    //-------------------------------------------------------// 
+    // Add options to the dropdown menu using D3
+    var dropdownMenu = d3.select("#selDataset");
+    
+    // Append `option value` to select tree - https://stackoverflow.com/questions/43121679/how-to-append-option-into-select-combo-box-in-d3
+    sampleID.forEach(s => {
+        var options = dropdownMenu.selectAll("option").data(sampleID).enter().append("option");
+        options.text(s);
+        options.attr("value", s);
+    }); // WHY IS IT THE SAME NUMBER????
 
 
     // Initialize the page with a default plot & demographic info
@@ -44,7 +55,7 @@ d3.json("./samples.json").then(function(data) {
         //-------------------------------------------------------// 
 
         // Create trace
-        var trace1 = {
+        var traceH = {
             x: sampleValues[0].reverse(),
             y: otuIDChartLabel[0].reverse(),
             type: "bar",
@@ -53,18 +64,36 @@ d3.json("./samples.json").then(function(data) {
         };
 
         // Data
-        var dataPlot = [trace1];
+        var dataPlotH = [traceH];
 
         // Render the plot
-        Plotly.newPlot("bar", dataPlot);
+        Plotly.newPlot("bar", dataPlotH);
 
 
         // BUBBLE CHART //
         //-------------------------------------------------------// 
 
-
-
-
+        var traceB = {
+            x: otuID[0],
+            y: sampleValues[0],
+            mode: 'markers',
+            text: otuLabels[0],
+            marker: {
+              color: otuID[0],
+              size: sampleValues[0]
+            }
+          };
+          
+          var dataPlotB = [traceB];
+          
+          var layoutB = {
+            xaxis: {title: 'OTU ID'},
+            // showlegend: false,
+            height: 600,
+            width: 1200
+          };
+          
+          Plotly.newPlot('bubble', dataPlotB, layoutB);
 
 
         // DEFAULT DEMOGRAPHIC BOX // 
@@ -85,27 +114,14 @@ d3.json("./samples.json").then(function(data) {
     // Function called by DOM changes
     function optionChanged() {
         
-        // Use D3 to select the dropdown menu
-        var dropdownMenu = d3.select("#selDataset");
-        
         // Assign the value of the dropdown menu option to a variable
         var dataset = dropdownMenu.property("value");
-        console.log(dataset);
 
-        // Oh gosh... Don't tell me, we have to append the "names" into drop down in html T_T
-                // DOESN'T WORK //
-        // Append `option value` to select tree
-        sampleID.forEach(s => {
-            var optionValue = selectID.append("option");
-            // optionValue.append(`value="${s}"`).text(s); //failed
-            // optionValue.append(`value="${s}"`).text(s); //failed
-            // selectID.attr('value', (s) => ${value}.push(s));
-            selectID.text(s);
+            
 
-        });
         // HORIZONTAL BAR CHART //
         //-------------------------------------------------------// 
-        // Initialize empty array for 
+        // Initialize empty array for............
         var subjectData = [];
 
 
@@ -117,6 +133,9 @@ d3.json("./samples.json").then(function(data) {
         // Call function to update the chart
         Plotly.restyle("bar", "x", [x]);
         Plotly.restyle("bar", "y", [x]);
+
+        // BUBBLE CHART // 
+        //-------------------------------------------------------// 
 
         // DEMOGRAPHIC BOX // 
         //-------------------------------------------------------// 
@@ -143,11 +162,6 @@ d3.json("./samples.json").then(function(data) {
     init();
 
     
-
-
-   
-
-
 
 });
 
