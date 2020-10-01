@@ -1,13 +1,9 @@
 // Use the D3 library to read in samples.json.
 d3.json("./samples.json").then(function(data) {
-    // console.log(data.samples.length);
 
     // Pulling out my subjects
     var mySample = data.samples;
 
-    // console.log(mySample); 
-    
-    
     //-------------------------------------------------------// 
     // Define all the values for all the fields for plotting/info box
     var sampleID = mySample.map(s => s.id);
@@ -23,7 +19,6 @@ d3.json("./samples.json").then(function(data) {
         var otuIDLabelArray = [];        
         i.forEach(j => {
             otuIDLabelArray.push(`OTU ${j}`);
-            // console.log(otuIDLabelArray);    
         });
         otuIDChartLabel.push(otuIDLabelArray);
     });
@@ -31,16 +26,13 @@ d3.json("./samples.json").then(function(data) {
     var otuLabels = mySample.map(s => s.otu_labels);
 
     var demographicData = data.metadata;
-    // console.log(demographicData);
 
     // MENU OPTION //
     //-------------------------------------------------------// 
     var dropdownMenu = d3.select("#selDataset");
-    dropdownMenu.on("change", optionChanged);
 
     // Get a reference to the demographic div
     var subjectDemo = d3.select("#sample-metadata");
-    // subjectDemo.on("change", optionChanged);
     
     // Append `option value` to select tree
     sampleID.forEach(s => {
@@ -49,6 +41,8 @@ d3.json("./samples.json").then(function(data) {
         .property("value", s);   
     });
 
+    // HTML onchange doesn't work..
+    dropdownMenu.on("change", optionChanged);
 
     // Initialize the page with a default plot & demographic info
     function init() {
@@ -100,19 +94,18 @@ d3.json("./samples.json").then(function(data) {
 
         // DEFAULT DEMOGRAPHIC BOX // 
         //-------------------------------------------------------// 
-    
         // Use `Object.entries` and `forEach` to iterate through keys and values
         Object.entries(demographicData[0]).forEach(([key, value]) => {
             // Append `p` tag and add data
-            var paraValue = subjectDemo.append("p");
-            paraValue.text(`${key}: ${value}`);
+            subjectDemo.append("p")
+            .text(`${key}: ${value}`);
         });    
     }
     
-
     // Function called by DOM changes
     function optionChanged() {
         console.log("is this working");
+        
         // Assign the value of the dropdown menu option to a variable
         var dataset = dropdownMenu.property("value");
 
@@ -162,12 +155,12 @@ d3.json("./samples.json").then(function(data) {
         Plotly.restyle('bubble', "marker.color", [subjectDataXBub]);
         Plotly.restyle('bubble', "marker.size", [subjectDataYBub]);
 
-        // console.log(demographicData);
         // DEMOGRAPHIC BOX // 
         //-------------------------------------------------------// 
+        // Clear the Demographic info
+        d3.select("#sample-metadata").html("");
+        // Show updated dashboard
         demographicData.forEach(s => {
-            // console.log(dataset);
-            // console.log(s.id);
             if (parseInt(dataset) === s.id) {
                 Object.entries(s).forEach(([key, value]) => {
                     subjectDemo.append("p")
@@ -179,7 +172,6 @@ d3.json("./samples.json").then(function(data) {
     }
 
     init();
-
 
 });
 
