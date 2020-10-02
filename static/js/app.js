@@ -1,7 +1,15 @@
+// var sampleTest; 
 // Use the D3 library to read in samples.json.
 d3.json("./samples.json").then(function(data) {
 
+//     sampleTest = data;
+
+// });
+
+// console.log(sampleTest);
+
     // Pulling out my subjects
+    // var mySample = data.samples;
     var mySample = data.samples;
 
     //-------------------------------------------------------// 
@@ -41,7 +49,7 @@ d3.json("./samples.json").then(function(data) {
         .property("value", s);   
     });
 
-    // HTML onchange doesn't work..
+    // Not using HTML onchange..
     dropdownMenu.on("change", optionChanged);
 
     // Initialize the page with a default plot & demographic info
@@ -49,7 +57,6 @@ d3.json("./samples.json").then(function(data) {
 
         // DEFAULT HORIZONTAL BAR CHART //
         //-------------------------------------------------------// 
-
         // Create trace
         var traceH = {
             x: sampleValues[0].slice(0, 10).reverse(),
@@ -62,13 +69,17 @@ d3.json("./samples.json").then(function(data) {
         // Data
         var dataPlotH = [traceH];
 
+        var barLayout = {
+            title: "Top 10 Bacteria Cultures Found",
+            margin: {t: 30, l: 150}
+        }
+
         // Render the plot
-        Plotly.newPlot("bar", dataPlotH);
+        Plotly.newPlot("bar", dataPlotH, barLayout);
 
 
-        // BUBBLE CHART //
+        // DEFAULT BUBBLE CHART //
         //-------------------------------------------------------// 
-
         var traceB = {
             x: otuID[0],
             y: sampleValues[0],
@@ -91,15 +102,34 @@ d3.json("./samples.json").then(function(data) {
           
           Plotly.newPlot('bubble', dataPlotB, layoutB);
 
-
         // DEFAULT DEMOGRAPHIC BOX // 
         //-------------------------------------------------------// 
         // Use `Object.entries` and `forEach` to iterate through keys and values
         Object.entries(demographicData[0]).forEach(([key, value]) => {
             // Append `p` tag and add data
             subjectDemo.append("p")
-            .text(`${key}: ${value}`);
+            .text(`${key.toUpperCase()}: ${value}`);
         });    
+
+        // DEFAULT GAUGE // 
+        //-------------------------------------------------------// 
+        var dataGauge = [
+            {
+                domain: { x: [0, 1], y: [0, 1] },
+                value: demographicData[0].wfreq,
+                title: { text: "Scrubs per Week"},
+                type: "indicator",
+                mode: "gauge",
+                gauge: { axis: { range: [0, 9] },
+                        steps: [
+                            { range: [0, 9], color: "cyan" },
+                        ], }
+            }
+        ];
+        
+        var layout = { width: 600, height: 500, margin: { t: 0, b: 0 } };
+        
+        Plotly.newPlot('gauge', dataGauge, layout);
     }
     
     // Function called by DOM changes
@@ -164,7 +194,7 @@ d3.json("./samples.json").then(function(data) {
             if (parseInt(dataset) === s.id) {
                 Object.entries(s).forEach(([key, value]) => {
                     subjectDemo.append("p")
-                    .text(`${key}: ${value}`);
+                    .text(`${key.toUpperCase()}: ${value}`);
                 });  
             }
         });
@@ -174,13 +204,3 @@ d3.json("./samples.json").then(function(data) {
     init();
 
 });
-
-
-
-
-
-
-    
-    
-    
-    
