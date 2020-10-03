@@ -1,206 +1,169 @@
-// var sampleTest; 
-// Use the D3 library to read in samples.json.
-d3.json("./samples.json").then(function(data) {
+/* Code below was derived from 3 different sources: 
+    my own, my instructor's office hour demo and my tutor */
 
-//     sampleTest = data;
+// DASHBOARD MENU OPTION //
+//-------------------------------------------------------// 
+function dashboard() {
+    // Get a reference to the option selection div
+    var selData = d3.select("#selDataset");
 
-// });
+    // Use the D3 library to read in samples.json
+    d3.json("./samples.json").then(function(data) {
 
-// console.log(sampleTest);
+        // Pulling out my subjects id
+        var subjectID = data.names;
 
-    // Pulling out my subjects
-    // var mySample = data.samples;
-    var mySample = data.samples;
-
-    //-------------------------------------------------------// 
-    // Define all the values for all the fields for plotting/info box
-    var sampleID = mySample.map(s => s.id);
-
-    var sampleValues = mySample.map(s => s.sample_values);
-
-    var otuID = mySample.map(s => s.otu_ids);
-
-    var otuIDBar = otuID.slice(0,10);
-    var otuIDChartLabel = [];
-
-    otuIDBar.forEach((i) => {
-        var otuIDLabelArray = [];        
-        i.forEach(j => {
-            otuIDLabelArray.push(`OTU ${j}`);
+        // Append `option value` to html tree
+        subjectID.forEach((n) => {
+            selData.append("option")
+            .text(n)
+            .property("value", n);  
         });
-        otuIDChartLabel.push(otuIDLabelArray);
-    });
-
-    var otuLabels = mySample.map(s => s.otu_labels);
-
-    var demographicData = data.metadata;
-
-    // MENU OPTION //
-    //-------------------------------------------------------// 
-    var dropdownMenu = d3.select("#selDataset");
-
-    // Get a reference to the demographic div
-    var subjectDemo = d3.select("#sample-metadata");
     
-    // Append `option value` to select tree
-    sampleID.forEach(s => {
-        dropdownMenu.append("option")
-        .text(s)
-        .property("value", s);   
+    // DEFAULT ID ON DASHBOARD // 
+    var newData =(subjectID[0]);
+
+    optionChanged(newData);
+    // demographic(newData);
+    // allCharts(newData);
     });
+}
 
-    // Not using HTML onchange..
-    dropdownMenu.on("change", optionChanged);
+// DEMOGRAPHIC INFO BOX // 
+//-------------------------------------------------------// 
+function demographic(newSubjectID) {
 
-    // Initialize the page with a default plot & demographic info
-    function init() {
+    // Import data using D3
+    d3.json("./samples.json").then(function(data) {
 
-        // DEFAULT HORIZONTAL BAR CHART //
-        //-------------------------------------------------------// 
-        // Create trace
-        var traceH = {
-            x: sampleValues[0].slice(0, 10).reverse(),
-            y: otuIDChartLabel[0].slice(0, 10).reverse(),
-            type: "bar",
-            orientation: "h",
-            text: otuLabels[0].slice(0,10).reverse()
-        };
+        // Pulling out demographic information from JSON
+        var demographicData = data.metadata;
 
-        // Data
-        var dataPlotH = [traceH];
+        // Pull out demo info of the selected id
+        var allResults = demographicData.filter(md => md.id === parseInt(newSubjectID));
 
-        var barLayout = {
-            title: "Top 10 Bacteria Cultures Found",
-            margin: {t: 30, l: 150}
-        }
+        // Pulling out JSON from filtered array - info of subject of interest
+        var firstResult = allResults[0];
 
-        // Render the plot
-        Plotly.newPlot("bar", dataPlotH, barLayout);
+        // Get a reference to the demographic div
+        var subjectDemo = d3.select("#sample-metadata");
 
+        // Clearing out the current demo info
+        subjectDemo.html("");
 
-        // DEFAULT BUBBLE CHART //
-        //-------------------------------------------------------// 
-        var traceB = {
-            x: otuID[0],
-            y: sampleValues[0],
-            mode: 'markers',
-            text: otuLabels[0],
-            marker: {
-              color: otuID[0],
-              size: sampleValues[0]
-            }
-          };
-          
-          var dataPlotB = [traceB];
-          
-          var layoutB = {
-            xaxis: {title: 'OTU ID'},
-            // showlegend: false,
-            height: 600,
-            width: 1200
-          };
-          
-          Plotly.newPlot('bubble', dataPlotB, layoutB);
+        // Use `Object.entries` and `forEach` to get all demographic information
+        Object.entries(firstResult).forEach(([key, value]) => {
+           var row =  subjectDemo.append("p")
+           row.text(`${key.toUpperCase()}: ${value}`);
+        });
 
-        // DEFAULT DEMOGRAPHIC BOX // 
-        //-------------------------------------------------------// 
-        // Use `Object.entries` and `forEach` to iterate through keys and values
-        Object.entries(demographicData[0]).forEach(([key, value]) => {
-            // Append `p` tag and add data
-            subjectDemo.append("p")
-            .text(`${key.toUpperCase()}: ${value}`);
-        });    
+    });
+};
 
-        // DEFAULT GAUGE // 
-        //-------------------------------------------------------// 
-        var dataGauge = [
+// GAUGE // 
+//-------------------------------------------------------//
+function gague(newSubjectID) {
+    
+    // Import data using D3
+    d3.json("./samples.json").then(function(data) {
+        
+        // Pulling out washing frequency information from JSON
+        var washFreqData = data.metadata
+        var result = washFreqData.filter(md => md.id === parseInt(newSubjectID));
+        
+        // Pulling out JSON from filtered array - info of subject of interest
+        var selectSubject = result[0].wfreq;
+
+        // Create trace data
+        var traceGauge = [
             {
                 domain: { x: [0, 1], y: [0, 1] },
-                value: demographicData[0].wfreq,
-                title: { text: "Scrubs per Week"},
+                value: selectSubject,
+                title: { text: "Belly Button Washing Frequency <br> Scrubs per Week"},
                 type: "indicator",
                 mode: "gauge",
                 gauge: { axis: { range: [0, 9] },
                         steps: [
-                            { range: [0, 9], color: "cyan" },
-                        ], }
+                            { range: [0, 9], color: "#7ab0d1" },
+                        ] },
             }
         ];
+
+        // Create layout
+        var layoutGauge = { width: 600, height: 500, margin: { t: 0, b: 0 } };
         
-        var layout = { width: 600, height: 500, margin: { t: 0, b: 0 } };
+        // Render the plot
+        Plotly.newPlot('gauge', traceGauge, layoutGauge);
+
+    });
+}
+
+// BAR & BUBBLE PLOTS // 
+//-------------------------------------------------------//
+function allCharts(newSubjectID) {
+
+    // Import data using D3
+    d3.json("./samples.json").then(function(data) {
+
+        // Pulling out culture results information from JSON
+        var allSample = data.samples.filter(s => s.id === newSubjectID);
         
-        Plotly.newPlot('gauge', dataGauge, layout);
-    }
-    
-    // Function called by DOM changes
-    function optionChanged() {
-        console.log("is this working");
+        // Pulling out JSON from filtered array - info of subject of interest
+        var selectSample = allSample[0];
+
+
+        // Bar chart //
+        // Create trace data
+        var traceBar = {
+            x: selectSample.sample_values.slice(0, 10).reverse(),
+            y: selectSample.otu_ids.map(i => `OTU ${i}`).slice(0, 10).reverse(),
+            type: "bar",
+            orientation: "h",
+            text: selectSample.otu_labels.slice(0,10).reverse()
+        }
         
-        // Assign the value of the dropdown menu option to a variable
-        var dataset = dropdownMenu.property("value");
+        // Create layout
+        var layoutBar = {
+            title: "Top 10 Bacteria Cultures Found",
+            margin: {t: 30, l: 150}
+        }
 
-        // Initialize empty array for update bar/bubble plot
-        var subjectDataXBar = [];
-        var subjectDataYBar = [];
-        var subjectDataTextBar = [];
+        // Render the bar plot
+        Plotly.newPlot("bar", [traceBar], layoutBar);
 
-        var subjectDataYBub = [];
-        var subjectDataYBub = [];
-        var subjectDataTextBub = [];
-
-        // some sort of loop
-        mySample.forEach(s => {
-            if (dataset === s.id) {
-                subjectDataYBub = s.sample_values;
-                subjectDataXBar = subjectDataYBub.slice(0,10).reverse()
-
-                subjectDataXBub = s.otu_ids;
-                subjectDataYBar = subjectDataXBub.slice(0,10);
-
-                var otuIDLabelArray = []; 
-
-                subjectDataYBar.forEach((i) => {
-                    otuIDLabelArray.push(`OTU ${i}`);  
-                });
-
-                subjectDataYBar = otuIDLabelArray.reverse();
-                
-                subjectDataTextBub = s.otu_labels;
-                subjectDataTextBar = subjectDataTextBub.slice(0,10).reverse();      
-        
+        // Bubble Chart //
+        // Create trace data
+        var traceBubble = {
+            x: selectSample.otu_ids,
+            y: selectSample.sample_values,
+            mode: 'markers',
+            text: selectSample.otu_labels,
+            marker: {
+              color: selectSample.otu_ids,
+              size: selectSample.sample_values
             }
-        });
+        };
 
-        // HORIZONTAL BAR CHART //
-        //-------------------------------------------------------// 
-        Plotly.restyle("bar", "x", [subjectDataXBar]);
-        Plotly.restyle("bar", "y", [subjectDataYBar]);
-        Plotly.restyle("bar", "text", [subjectDataTextBar]);
+        // Create layout
+        var layoutBubble = {
+            xaxis: {title: 'OTU ID'},
+            height: 600,
+            width: 1200
+          };
+        
+        // Render the bubble plot
+        Plotly.newPlot('bubble', [traceBubble], layoutBubble);     
+     });
+}
 
-        // BUBBLE CHART // 
-        //-------------------------------------------------------// 
-        Plotly.restyle('bubble', "x", [subjectDataXBub]);
-        Plotly.restyle('bubble', "y", [subjectDataYBub]);
-        Plotly.restyle('bubble', "text", [subjectDataTextBub]);
-        Plotly.restyle('bubble', "marker.color", [subjectDataXBub]);
-        Plotly.restyle('bubble', "marker.size", [subjectDataYBub]);
+// Function called by DOM changes - when new subject ID is selected
+//-------------------------------------------------------//
+function optionChanged(newSubjectID) {
+    demographic(newSubjectID);
+    allCharts(newSubjectID);
+    gague(newSubjectID);
+}
 
-        // DEMOGRAPHIC BOX // 
-        //-------------------------------------------------------// 
-        // Clear the Demographic info
-        d3.select("#sample-metadata").html("");
-        // Show updated dashboard
-        demographicData.forEach(s => {
-            if (parseInt(dataset) === s.id) {
-                Object.entries(s).forEach(([key, value]) => {
-                    subjectDemo.append("p")
-                    .text(`${key.toUpperCase()}: ${value}`);
-                });  
-            }
-        });
-
-    }
-
-    init();
-
-});
+// Initialize the page with the dashboard
+//-------------------------------------------------------//
+dashboard();
